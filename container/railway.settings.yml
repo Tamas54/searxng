@@ -14,3 +14,16 @@ search:
   formats:
     - html
     - json
+
+# Engines merge into the defaults by name. From this Railway datacentre IP the
+# two default heavyweights (duckduckgo, startpage) answer with a CAPTCHA and
+# SearXNG suspends them, which left only brave + google cse actually replying.
+# These three are off by default and tolerate datacentre IPs, so the chain
+# stands on more than two engines.
+engines:
+  - name: mojeek
+    disabled: false
+  - name: qwant
+    disabled: false
+  - name: bing
+    disabled: false
