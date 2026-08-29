@@ -4,3 +4,5 @@
 !container/entrypoint.sh
 !searx/**
 !requirements*.txt
+
+!container/railway.settings.yml

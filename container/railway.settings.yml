@@ -1,0 +1,16 @@
+# Settings template used by the Railway deployment (see /Dockerfile).
+# Docs: https://docs.searxng.org/admin/settings/
+use_default_settings: true
+
+server:
+  # Replaced at boot by entrypoint.sh, or overridden by $SEARXNG_SECRET.
+  secret_key: "ultrasecretkey"
+  image_proxy: true
+  # Off: this instance is consumed as an API, not a public web UI.
+  limiter: false
+  public_instance: false
+
+search:
+  formats:
+    - html
+    - json
