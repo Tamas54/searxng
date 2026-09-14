@@ -6,3 +6,7 @@
 !requirements*.txt
 
 !container/railway.settings.yml
+!container/railway-tor.settings.yml
+!container/railway-entrypoint.sh
+!container/torrc
+!container/tor-keepalive.py

@@ -1,0 +1,17 @@
+# Tor for the Railway SearXNG — CLIENT ONLY, egress for the search engines.
+#
+# Why: from the Railway datacentre IP every web engine was blocked
+# (2026-09-14: google cse / brave "Suspended: too many requests", qwant /
+# duckduckgo / startpage CAPTCHA, mojeek timeout — zero results). Measured
+# through Tor the same evening: duckduckgo (html) 0.9-2.0 s / 10 hits, the
+# Brave Search onion 3.6-4.3 s / 23-26 hits, warm circuits.
+#
+# The SOCKS port listens on loopback only: nothing outside this container can
+# use this Tor client.
+SocksPort 127.0.0.1:9050
+ClientOnly 1
+DataDirectory /tmp/tor-data
+AvoidDiskWrites 1
+Log notice file /tmp/tor.log
+GeoIPFile /opt/tor/share/geoip
+GeoIPv6File /opt/tor/share/geoip6

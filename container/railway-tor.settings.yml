@@ -1,0 +1,70 @@
+# Settings for the Railway deployment WITH Tor egress (see /Dockerfile and
+# container/railway-entrypoint.sh). The plain template (railway.settings.yml)
+# is the fallback when Tor does not bootstrap.
+# Docs: https://docs.searxng.org/admin/settings/
+use_default_settings: true
+
+server:
+  # Replaced at boot by the entrypoint, or overridden by $SEARXNG_SECRET.
+  secret_key: "ultrasecretkey"
+  image_proxy: true
+  # Off: this instance is consumed as an API, not a public web UI.
+  limiter: false
+  public_instance: false
+
+search:
+  formats:
+    - html
+    - json
+  # Behind Tor every new circuit is a new exit IP, so one CAPTCHA says little
+  # about the next request. The defaults (a CAPTCHA suspends an engine for a
+  # full day) would switch engines off on the first unlucky exit.
+  suspended_times:
+    SearxEngineAccessDenied: 120
+    SearxEngineCaptcha: 120
+    SearxEngineTooManyRequests: 60
+    cf_SearxEngineCaptcha: 300
+    cf_SearxEngineAccessDenied: 120
+    recaptcha_SearxEngineCaptcha: 300
+
+outgoing:
+  request_timeout: 10.0
+  max_request_timeout: 20.0
+  # HTTP/2 over a SOCKS chain buys nothing and adds failure modes.
+  enable_http2: false
+  # SearXNG verifies at start-up that this proxy is a Tor exit (fail-closed);
+  # the entrypoint only selects this file after Tor reported 100% bootstrap.
+  using_tor_proxy: true
+  extra_proxy_timeout: 5
+  proxies:
+    all://:
+      - socks5h://127.0.0.1:9050
+
+# Engines merge into the defaults by name.
+#
+# Measured through Tor on 2026-09-14 (curl, warm circuits):
+#   duckduckgo html POST (exit)  1.2-1.8 s, 10 hits    -> default endpoint
+#   Brave Search onion  3.6-4.3 s warm, 23-26 hits      -> base_url below,
+#                       kept warm by container/tor-keepalive.py
+#   Brave clearnet (exit)  429 CAPTCHA
+#   duckduckgo onion    406 Not Acceptable on the engine's POST
+#   google (exit)       302 to the CAPTCHA page
+#   qwant               403 CAPTCHA
+#   mojeek              timeout
+#
+# bing stays OFF (see railway.settings.yml: it poisons the ranking).
+engines:
+  - name: brave
+    base_url: "https://search.brave4u7jddbv7cyviptqjc7jusxh72uik7zt6adtckl5f4nwy2v72qd.onion/"
+  # duckduckgo stays on its clearnet html endpoint (default ddg_url), via Tor
+  # exits: its onion service answers the engine's POST with 406 Not Acceptable.
+  # Google answers Tor exits with its CAPTCHA page (302 /sorry) — off, so no
+  # query waits for an engine that cannot answer.
+  - name: google cse
+    disabled: true
+  - name: qwant
+    disabled: true
+  - name: mojeek
+    disabled: true
+  - name: startpage
+    disabled: true
