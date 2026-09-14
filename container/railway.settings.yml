@@ -21,13 +21,18 @@ search:
   # Az Echolot MINDIG küld `language`-et; a kliens nélküli hívóknak (Bridge)
   # marad az "auto" (Accept-Language nélkül = "all").
   default_lang: "auto"
+  # From ONE server IP, retrying a blocked engine every 1-2 minutes only
+  # prolongs the block (measured 2026-09-14/15: google cse 429s after ~70
+  # requests / 20 min). The engine core has 4 independent engines, so a
+  # suspended one costs nothing while the IP cools down. The upstream 15-day
+  # cf_* value is NOT taken over: days of silent outage.
   suspended_times:
-    SearxEngineAccessDenied: 120
-    SearxEngineCaptcha: 120
-    SearxEngineTooManyRequests: 60
-    cf_SearxEngineCaptcha: 300
-    cf_SearxEngineAccessDenied: 120
-    recaptcha_SearxEngineCaptcha: 300
+    SearxEngineAccessDenied: 900
+    SearxEngineCaptcha: 900
+    SearxEngineTooManyRequests: 600
+    cf_SearxEngineCaptcha: 3600
+    cf_SearxEngineAccessDenied: 3600
+    recaptcha_SearxEngineCaptcha: 3600
 
 outgoing:
   # A válasz a LEGLASSABB motorra vár (min(max motor-timeout, max_request_timeout)).
@@ -54,13 +59,16 @@ engines:
     proxies: {}
     categories: [general, echo_web]
     timeout: 3.5
-  # yandex (site-search widget): otthon 90/90, Tor 8/12, nyelv 98-99%;
+  # yandex: OPT-IN only (own category, off the default general path) —
+  # Russian provider: query transfer to a non-EU jurisdiction and no SafeSearch
+  # support; requested only by the ru edition. Railway 48/48 on 2026-09-15.
+  # (site-search widget): otthon 90/90, Tor 8/12, nyelv 98-99%;
   # ru/uk/tr-re `lang` paramétert is kap.
   - name: yandex
     disabled: false
     using_tor_proxy: false
     proxies: {}
-    categories: [general, echo_web]
+    categories: [echo_web_yx]
     timeout: 3.0
   # startpagina (Google-találat holland portálon át): otthon 85/90, Tor 10/12,
   # nyelv 94-96% (zh: 50-67%).
@@ -73,7 +81,7 @@ engines:
     timeout: 3.0
   # luxxle: otthon 85/90, Tor 7/12, nyelv 95-98%.
   - name: luxxle
-    disabled: false
+    disabled: true   # Railway IP: 0/48 (access denied), 2026-09-15
     inactive: false
     using_tor_proxy: false
     proxies: {}
@@ -87,7 +95,7 @@ engines:
     categories: [general, web, echo_web]
     timeout: 3.0
   - name: qwant
-    disabled: false
+    disabled: true   # Railway IP: 0/48 (CAPTCHA), 2026-09-15
     using_tor_proxy: false
     proxies: {}
     categories: [general, web, echo_web]
@@ -114,6 +122,7 @@ engines:
     timeout: 3.0
   # duckduckgo news: otthon 27/36 (hu/uk/el: üres), Tor 7/12, 100% dátumos.
   - name: duckduckgo news
+    disabled: true   # a 2nd DDG request per round from the same IP; empty for hu/uk/el
     using_tor_proxy: false
     proxies: {}
     categories: [news, echo_news]
