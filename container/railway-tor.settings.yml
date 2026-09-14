@@ -48,9 +48,11 @@ outgoing:
 #                       kept warm by container/tor-keepalive.py
 #   Brave clearnet (exit)  429 CAPTCHA
 #   duckduckgo onion    406 Not Acceptable on the engine's POST
-#   google (exit)       302 to the CAPTCHA page
-#   qwant               403 CAPTCHA
-#   mojeek              timeout
+#   startpage (exit)    2/7 queries, then parse errors   -> on, fails fast
+#   google (exit)       302 to the CAPTCHA page          -> DIRECT network
+#   qwant               403 CAPTCHA                      -> DIRECT network
+#   mojeek              timeout                          -> off
+#   yahoo               parse error                      -> default (off)
 #
 # bing stays OFF (see railway.settings.yml: it poisons the ranking).
 engines:
@@ -58,13 +60,22 @@ engines:
     base_url: "https://search.brave4u7jddbv7cyviptqjc7jusxh72uik7zt6adtckl5f4nwy2v72qd.onion/"
   # duckduckgo stays on its clearnet html endpoint (default ddg_url), via Tor
   # exits: its onion service answers the engine's POST with 406 Not Acceptable.
-  # Google answers Tor exits with its CAPTCHA page (302 /sorry) — off, so no
-  # query waits for an engine that cannot answer.
+  # DIRECT engines (Railway IP, no Tor). Through Tor Google and Qwant answer
+  # with a CAPTCHA; from the Railway IP they were blocked on 2026-09-14 but
+  # answered 6/6 on 2026-08-30 — such blocks come and go. On their own direct
+  # network they add Google-tier results whenever the IP is not blocked.
+  # Engines run in parallel, so a failing one costs no latency.
   - name: google cse
-    disabled: true
+    disabled: false
+    using_tor_proxy: false
+    proxies: {}
   - name: qwant
-    disabled: true
-  - name: mojeek
-    disabled: true
+    disabled: false
+    using_tor_proxy: false
+    proxies: {}
+  # startpage (Google results) through Tor: intermittent — 2 of 7 queries on
+  # 2026-09-14, the rest a parse error; it fails fast, so it stays on.
   - name: startpage
+    disabled: false
+  - name: mojeek
     disabled: true
