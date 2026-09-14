@@ -28,8 +28,13 @@ search:
     recaptcha_SearxEngineCaptcha: 300
 
 outgoing:
-  request_timeout: 10.0
-  max_request_timeout: 20.0
+  # SearXNG answers only when its SLOWEST engine is done (or timed out). With
+  # 10 s, one broken onion circuit (measured 2026-09-14: the Brave onion went
+  # from 17/17 to timeout + "proxy error" after ~30 min) held every response
+  # for 10.2 s — past the Echolot client's 5 s share, so the whole SearXNG
+  # answer was thrown away. Healthy engines answer in 1-3 s.
+  request_timeout: 4.0
+  max_request_timeout: 8.0
   # HTTP/2 over a SOCKS chain buys nothing and adds failure modes.
   enable_http2: false
   # SearXNG verifies at start-up that this proxy is a Tor exit (fail-closed);
@@ -42,22 +47,26 @@ outgoing:
 
 # Engines merge into the defaults by name.
 #
-# Measured through Tor on 2026-09-14 (curl, warm circuits):
-#   duckduckgo html POST (exit)  1.2-1.8 s, 10 hits    -> default endpoint
-#   Brave Search onion  3.6-4.3 s warm, 23-26 hits      -> base_url below,
-#                       kept warm by container/tor-keepalive.py
-#   Brave clearnet (exit)  429 CAPTCHA
-#   duckduckgo onion    406 Not Acceptable on the engine's POST
-#   startpage (exit)    2/7 queries, then parse errors   -> on, fails fast
-#   google (exit)       302 to the CAPTCHA page          -> DIRECT network
-#   qwant               403 CAPTCHA                      -> DIRECT network
-#   mojeek              timeout                          -> off
-#   yahoo               parse error                      -> default (off)
+# Measured on 2026-09-14 (production + locally):
+#   google cse (direct)      20 hits, 0.7-2 s — when the Railway IP is not blocked
+#   brave (direct)           20 hits; rate-limits quickly ("too many requests")
+#   startpage (Tor exit)     10 hits, intermittent (parse errors / CAPTCHA)
+#   Brave Search onion       17/17 for ~30 min, then timeout + "proxy error";
+#                            a fresh rendezvous took 47.7 s -> NOT used
+#   duckduckgo               "access denied" (exit) / 406 (onion) -> off in effect
+#   qwant                    CAPTCHA (direct and exit)
+#   mojeek                   timeout (exit) -> off
 #
 # bing stays OFF (see railway.settings.yml: it poisons the ranking).
 engines:
+  # brave: DIRECT (Railway IP), NOT the onion. Kommandant (2026-09-14):
+  # "az onion nem jó megoldás nyílt webes keresésre" — measured the same night:
+  # the Brave onion went from 17/17 to timeout + "proxy error" after ~30 min,
+  # and a fresh rendezvous took 47.7 s. Direct brave recovered from the
+  # Railway IP's rate limit mid-evening; blocks come and go.
   - name: brave
-    base_url: "https://search.brave4u7jddbv7cyviptqjc7jusxh72uik7zt6adtckl5f4nwy2v72qd.onion/"
+    using_tor_proxy: false
+    proxies: {}
   # duckduckgo stays on its clearnet html endpoint (default ddg_url), via Tor
   # exits: its onion service answers the engine's POST with 406 Not Acceptable.
   # DIRECT engines (Railway IP, no Tor). Through Tor Google and Qwant answer

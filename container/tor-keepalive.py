@@ -23,11 +23,13 @@ from httpx_socks import SyncProxyTransport
 # .onion names) is its `rdns=True` flag on a plain `socks5://` URL.
 PROXY = os.environ.get("SEARXNG_TOR_SOCKS", "socks5://127.0.0.1:9050")
 RETRY_PAUSE_S = 3.0
-ONIONS = [u for u in os.environ.get(
-    "SEARXNG_TOR_KEEPALIVE_URLS",
-    "https://search.brave4u7jddbv7cyviptqjc7jusxh72uik7zt6adtckl5f4nwy2v72qd.onion/",
-).split(",") if u.strip()]
-KEEPALIVE_S = float(os.environ.get("SEARXNG_TOR_KEEPALIVE_S", "180"))
+# Empty by default since 2026-09-14: no engine uses an onion endpoint any more
+# (the Brave onion was too flaky for open-web search). Set the env var to
+# re-enable warming for an onion engine.
+ONIONS = [u for u in os.environ.get("SEARXNG_TOR_KEEPALIVE_URLS", "").split(",")
+          if u.strip()]
+# 60 s: at 180 s the Brave onion circuit still broke after ~30 min (09-14).
+KEEPALIVE_S = float(os.environ.get("SEARXNG_TOR_KEEPALIVE_S", "60"))
 WARM_BUDGET_S = float(os.environ.get("SEARXNG_TOR_WARM_BUDGET_S", "75"))
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0"
 
@@ -71,4 +73,5 @@ def loop() -> None:
 
 
 if __name__ == "__main__":
-    warm() if "--warm" in sys.argv else loop()
+    if ONIONS:
+        warm() if "--warm" in sys.argv else loop()
