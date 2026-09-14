@@ -1,33 +1,131 @@
-# Settings template used by the Railway deployment (see /Dockerfile).
-# Docs: https://docs.searxng.org/admin/settings/
+# Settings template for the Railway deployment WITHOUT Tor — the fallback the
+# entrypoint selects when Tor does not bootstrap (or SEARXNG_TOR=0). Same engine
+# core as railway-tor.settings.yml, minus the Tor-only engines (startpage).
+#
+# 2026-09-15 — ENGINE CORE. Measured 2026-09-14 on 48 production requests: 92.5%
+# of all hits came from google cse alone (44/48 requests single-engine);
+# duckduckgo (html) 48/48 access denied, qwant 48/48 CAPTCHA, startpage 0/48,
+# brave 44/48 "too many requests". The core below was measured from a residential
+# IP (84 requests) and a Tor exit (24 requests, the "bad reputation" proxy) over
+# 12 languages; NOT yet from the Railway IP — verify after every deploy.
 use_default_settings: true
 
 server:
-  # Replaced at boot by entrypoint.sh, or overridden by $SEARXNG_SECRET.
   secret_key: "ultrasecretkey"
   image_proxy: true
-  # Off: this instance is consumed as an API, not a public web UI.
   limiter: false
   public_instance: false
 
 search:
-  formats:
-    - html
-    - json
+  formats: [html, json]
+  # Az Echolot MINDIG küld `language`-et; a kliens nélküli hívóknak (Bridge)
+  # marad az "auto" (Accept-Language nélkül = "all").
+  default_lang: "auto"
+  suspended_times:
+    SearxEngineAccessDenied: 120
+    SearxEngineCaptcha: 120
+    SearxEngineTooManyRequests: 60
+    cf_SearxEngineCaptcha: 300
+    cf_SearxEngineAccessDenied: 120
+    recaptcha_SearxEngineCaptcha: 300
 
-# Engines merge into the defaults by name. From this Railway datacentre IP the
-# two default heavyweights (duckduckgo, startpage) answer with a CAPTCHA and
-# SearXNG suspends them, which left only brave + google cse replying.
-#
-# bing is deliberately NOT here. It is off by default, and enabling it looked
-# like a win on result COUNT (20 -> 42) while being a loss on quality: queried
-# from this IP it ignores the query's language and returns unrelated pages
-# (a Hungarian central-bank query returned a Russian game marketplace, then a
-# soundboard site as the merged #1). Measured on three queries, dropping bing
-# restores the correct top hit. Count is not quality — re-measure before
-# re-enabling it.
+outgoing:
+  # A válasz a LEGLASSABB motorra vár (min(max motor-timeout, max_request_timeout)).
+  # Az Echolot a `timeout_limit` paraméterrel ennél is lejjebb húzhatja.
+  request_timeout: 3.5
+  max_request_timeout: 5.0
+  enable_http2: false
+
 engines:
+  # ── echo_web: a 12 kiadás KÖZÖS web-magja ─────────────────────────────
+  # google cse: az igásló (nyelv 97-99%). Otthonról ~70 kérés/20 perc után
+  # 429, és 10+ percig nem jött vissza (per-IP keret!); Tor-kilépőről 9/12.
+  - name: google cse
+    disabled: false
+    using_tor_proxy: false
+    proxies: {}
+    categories: [general, web, echo_web]
+    timeout: 3.0
+  # duckduckgo web: a DDG JSON-útja (d.js), NEM a html — otthon 90/90,
+  # Tor 10/12, nyelv 96-100%. Nincs nyelv- és időszűrő-támogatása.
+  - name: duckduckgo web
+    disabled: false
+    using_tor_proxy: false
+    proxies: {}
+    categories: [general, echo_web]
+    timeout: 3.5
+  # yandex (site-search widget): otthon 90/90, Tor 8/12, nyelv 98-99%;
+  # ru/uk/tr-re `lang` paramétert is kap.
+  - name: yandex
+    disabled: false
+    using_tor_proxy: false
+    proxies: {}
+    categories: [general, echo_web]
+    timeout: 3.0
+  # startpagina (Google-találat holland portálon át): otthon 85/90, Tor 10/12,
+  # nyelv 94-96% (zh: 50-67%).
+  - name: startpagina
+    disabled: false
+    inactive: false
+    using_tor_proxy: false
+    proxies: {}
+    categories: [general, echo_web]
+    timeout: 3.0
+  # luxxle: otthon 85/90, Tor 7/12, nyelv 95-98%.
+  - name: luxxle
+    disabled: false
+    inactive: false
+    using_tor_proxy: false
+    proxies: {}
+    categories: [general, echo_web]
+    timeout: 3.5   # hideg p90 otthonról 3,13 s
+  # Alkalmi motorok (ha az IP épp nincs tiltva, jó minőség): gyorsan buknak,
+  # a felfüggesztés 60-120 s után újrapróbál.
+  - name: brave
+    using_tor_proxy: false
+    proxies: {}
+    categories: [general, web, echo_web]
+    timeout: 3.0
   - name: qwant
     disabled: false
+    using_tor_proxy: false
+    proxies: {}
+    categories: [general, web, echo_web]
+    timeout: 3.0
+  # startpage: marad Tor-kilépőn (A/B: 60/66 válasz).
+  - name: startpage
+    disabled: true    # Tor-only (CAPTCHA from the Railway IP)
+  # KI: a html-DDG sehonnan nem válaszol (otthon 0/48 CAPTCHA, Tor 0/12
+  # access denied), csak az időkeretet égeti.
+  - name: duckduckgo
+    disabled: true
+  # KI: mojeek 23/24 "üres" válasz otthonról is (néma kudarc), Tor 0/12.
   - name: mojeek
+    disabled: true
+  # bing KI marad: nyelv nélkül 7%, Tor-ról nyelvvel is 25% nyelvi egyezés.
+
+  # ── echo_news: dátumos hírtalálatok, 12 nyelv ─────────────────────────
+  # bing news: otthon 34/36, Tor 9/12, nyelv 100% (a web-binggel ellentétben
+  # a nyelvet tartja), 60% dátumos.
+  - name: bing news
+    using_tor_proxy: false
+    proxies: {}
+    categories: [news, echo_news]
+    timeout: 3.0
+  # duckduckgo news: otthon 27/36 (hu/uk/el: üres), Tor 7/12, 100% dátumos.
+  - name: duckduckgo news
+    using_tor_proxy: false
+    proxies: {}
+    categories: [news, echo_news]
+    timeout: 3.0
+  - name: startpage news
+    disabled: true    # Tor-only
+  # qwant news CSAK en/de/es/fr/it (a qwant_news_locales szerint); más nyelven
+  # "access denied" → a `qwant` hálózatot (a web-qwantot is!) felfüggeszti.
+  - name: qwant news
     disabled: false
+    using_tor_proxy: false
+    proxies: {}
+    categories: [news, echo_news_qw]
+    timeout: 3.0
+  # google news / brave.news: otthon 0/24 (CAPTCHA / 429) → nem kerül be.
