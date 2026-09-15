@@ -19,7 +19,10 @@ TEMPLATE_PLAIN=/usr/local/searxng/settings.template.yml
 TOR_TIMEOUT="${SEARXNG_TOR_BOOTSTRAP_TIMEOUT:-90}"
 
 mode=plain
-if [ "${SEARXNG_TOR:-1}" != "0" ]; then
+# 2026-09-15: Tor is OFF by default — no engine uses it any more (the exit
+# pool did not hold under load; startpage went proof-of-work upstream).
+# SEARXNG_TOR=1 re-enables it together with railway-tor.settings.yml.
+if [ "${SEARXNG_TOR:-0}" != "0" ]; then
     rm -rf /tmp/tor-data /tmp/tor.log
     mkdir -p /tmp/tor-data
     chmod 700 /tmp/tor-data
@@ -40,10 +43,12 @@ if [ "${SEARXNG_TOR:-1}" != "0" ]; then
     done
     if [ "$mode" = tor ]; then
         echo "[railway] tor bootstrapped in ${waited}s - engines egress via Tor"
-        # Onion engines: the first rendezvous takes ~40 s, longer than the
-        # engine timeout. Warm them before SearXNG serves, then keep them warm.
-        /usr/local/searxng/.venv/bin/python /opt/tor/tor-keepalive.py --warm
-        /usr/local/searxng/.venv/bin/python /opt/tor/tor-keepalive.py &
+        # Onion engines only (none by default since 2026-09-15): the first
+        # rendezvous takes ~40 s, longer than the engine timeout.
+        if [ -n "${SEARXNG_TOR_KEEPALIVE_URLS:-}" ]; then
+            /usr/local/searxng/.venv/bin/python /opt/tor/tor-keepalive.py --warm
+            /usr/local/searxng/.venv/bin/python /opt/tor/tor-keepalive.py &
+        fi
     else
         echo "[railway] tor NOT bootstrapped within ${TOR_TIMEOUT}s - starting with PLAIN egress"
         tail -n 5 /tmp/tor.log 2>/dev/null

@@ -24,11 +24,16 @@ RUN apt-get update \
  && cp /usr/share/tor/geoip /usr/share/tor/geoip6 /opt/tor/share/ \
  && rm -rf /var/lib/apt/lists/*
 
-FROM docker.io/searxng/searxng:2026.8.29-d226b78bc
+FROM docker.io/searxng/searxng:2026.9.14-ef05645f0
 
 COPY --from=tor /opt/tor /opt/tor
 COPY container/torrc /opt/tor/torrc
 COPY container/tor-keepalive.py /opt/tor/tor-keepalive.py
+
+# Per-engine suspension cap for the Tor exit pool (fails the build if the
+# pinned image's code no longer matches).
+COPY container/patch_suspend_cap.py /tmp/patch_suspend_cap.py
+RUN /usr/local/searxng/.venv/bin/python /tmp/patch_suspend_cap.py && rm /tmp/patch_suspend_cap.py
 
 # The plain template: the fallback when Tor does not bootstrap (and the file the
 # upstream entrypoint would seed from).
