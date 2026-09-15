@@ -145,7 +145,12 @@ engines:
   # Measured 2026-09-15: youtube, brave.videos, duckduckgo videos, qwant
   # videos, dailymotion and sepiasearch (PeerTube) answer in ~1.1 s; the same
   # YouTube video comes from up to 4 engines (the page shows it as the echo).
-  # NOT in echo_vid: google videos (CAPTCHA), vimeo (HTTP error).
+  # Ranking (measured on Christine Lagarde / Tarr Zoltán / Terror Háza): the
+  # multi-engine core (youtube, brave, duckduckgo, qwant) on top; dailymotion
+  # ("haza", "ZOLTÁN CZIBOR") and sepiasearch as low-weight tail volume.
+  # NOT in echo_vid: bing videos (junk, not volume: "ISO9001 Thermoplastic",
+  # "Funko Pop Bleach", "How to Censor Words in Discord"), google videos
+  # (CAPTCHA), vimeo (HTTP error).
   - name: youtube
     categories: [videos, music, echo_vid]
     timeout: 3.0
@@ -161,10 +166,9 @@ engines:
     timeout: 3.0
   - name: dailymotion
     categories: [videos, echo_vid]
+    weight: 0.3
     timeout: 3.0
   - name: sepiasearch
     categories: [videos, echo_vid]
-    timeout: 3.0
-  - name: bing videos
-    categories: [videos, echo_vid]
+    weight: 0.5
     timeout: 3.0
