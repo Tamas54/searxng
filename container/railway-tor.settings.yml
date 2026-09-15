@@ -105,10 +105,12 @@ engines:
   # Christine Lagarde): brave.images 200 relevant hits per query, qwant images
   # relevant for Hungarian (CAPTCHA at times), wikicommons for places and
   # people, duckduckgo images (access denied at times — suspended, then back).
-  # NOT in echo_img: bing images (poison: "Komasan fanart" for Christine
-  # Lagarde, "Star of David" for the Eiffel Tower), pinterest (Béla Tarr film
-  # stills for Zoltán Tarr), artic/unsplash/pexels/flickr (stock and art:
-  # Toulouse-Lautrec for "Terror Háza"), google cse images (timeout).
+  # Kommandant (09-15): „minél több találat van, annál jobb" — so the volume
+  # engines are IN as well (pinterest, flickr, unsplash, pexels), with a low
+  # weight: they fill the tail, the relevant core stays on top.
+  # NOT in echo_img (junk, not volume): bing images ("Komasan fanart" for
+  # Christine Lagarde, "Star of David" for the Eiffel Tower), artic (museum
+  # art: Toulouse-Lautrec for "Terror Háza"), google cse images (timeout).
   - name: brave.images
     categories: [images, echo_img]
     timeout: 3.0
@@ -121,6 +123,22 @@ engines:
     timeout: 3.0
   - name: duckduckgo images
     categories: [images, echo_img]
+    timeout: 3.0
+  - name: pinterest
+    categories: [images, echo_img]
+    weight: 0.3
+    timeout: 3.0
+  - name: flickr
+    categories: [images, echo_img]
+    weight: 0.3
+    timeout: 3.0
+  - name: unsplash
+    categories: [images, echo_img]
+    weight: 0.2
+    timeout: 3.0
+  - name: pexels
+    categories: [images, echo_img]
+    weight: 0.2
     timeout: 3.0
 
   # ── VIDEOS (echo_vid; the search page's Videos tab) ─────────────────────
