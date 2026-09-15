@@ -68,12 +68,12 @@ engines:
     inactive: false
     categories: [general, echo_web]
     timeout: 3.5
-  # yandex: OPT-IN only (own category, off the default general path) —
-  # Russian provider: query transfer to a non-EU jurisdiction and no SafeSearch
-  # support; requested only by the ru edition.
+  # yandex: EVERY edition, every level — Kommandant (2026-09-15): „minden
+  # szinten is kellhet — gazdagítja a keresőmotort". (No SafeSearch support;
+  # accepted.) echo_web_yx stays for the clients that still ask for it.
   - name: yandex
     disabled: false
-    categories: [echo_web_yx]
+    categories: [general, echo_web, echo_web_yx]
     timeout: 3.0
   # OFF: startpagina (parse errors with the current image), mojeek (a CAPTCHA
   # page with HTTP 200 = silent zero), bing (poisons the ranking). startpage is
