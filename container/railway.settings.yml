@@ -82,6 +82,12 @@ engines:
     disabled: true
   - name: mojeek
     disabled: true
+  # onion-only engines of the defaults: they cannot load without Tor and only
+  # add an error line to every boot log
+  - name: ahmia
+    inactive: true   # not even loaded (disabled still loads)
+  - name: torch
+    inactive: true   # not even loaded (disabled still loads)
 
   # ── NEWS (echo_news; off the default path) ──────────────────────────────
   - name: bing news

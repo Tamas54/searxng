@@ -41,6 +41,14 @@ COPY --chown=977:977 container/railway.settings.yml /usr/local/searxng/settings.
 COPY --chown=977:977 container/railway-tor.settings.yml /usr/local/searxng/railway-tor.settings.yml
 COPY --chmod=755 container/railway-entrypoint.sh /usr/local/searxng/railway-entrypoint.sh
 
+# Concurrency (2026-09-15, measured on production): the image default
+# GRANIAN_BLOCKING_THREADS=4 served 4 parallel searches in ~1.4 s and queued
+# the next 4 to ~2.2 s — 20 concurrent readers would wait ~7 s, past the
+# Echolot client's 5 s share. One worker (the engines' suspension state stays
+# shared in one process), more threads: each search mostly waits on the
+# network, not the CPU.
+ENV GRANIAN_BLOCKING_THREADS=16
+
 ENTRYPOINT ["/usr/local/searxng/railway-entrypoint.sh"]
 
 EXPOSE 8080
