@@ -63,11 +63,11 @@ engines:
     disabled: false
     categories: [general, web, echo_web]
     timeout: 3.0
+  # luxxle OFF (2026-09-15, production burst of 12 parallel searches): 2/12
+  # answers, 4 access denied, the rest slow — and SearXNG answers only when its
+  # SLOWEST engine is done, so luxxle's 3.5 s held every search at ~3.8 s.
   - name: luxxle
-    disabled: false
-    inactive: false
-    categories: [general, echo_web]
-    timeout: 3.5
+    disabled: true
   # yandex: EVERY edition, every level — Kommandant (2026-09-15): „minden
   # szinten is kellhet — gazdagítja a keresőmotort". (No SafeSearch support;
   # accepted.) echo_web_yx stays for the clients that still ask for it.
