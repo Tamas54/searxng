@@ -11,3 +11,4 @@
 !container/torrc
 !container/tor-keepalive.py
 !container/patch_suspend_cap.py
+!container/echolot_guard.py

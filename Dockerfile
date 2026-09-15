@@ -35,6 +35,14 @@ COPY container/tor-keepalive.py /opt/tor/tor-keepalive.py
 COPY container/patch_suspend_cap.py /tmp/patch_suspend_cap.py
 RUN /usr/local/searxng/.venv/bin/python /tmp/patch_suspend_cap.py && rm /tmp/patch_suspend_cap.py
 
+# Access key in front of SearXNG (container/echolot_guard.py; no enforcement
+# while SEARXNG_ACCESS_KEY is empty). granian serves the guard instead of the
+# bare app; the build fails if the upstream exec line changed.
+COPY container/echolot_guard.py /usr/local/searxng/echolot_guard.py
+RUN grep -qx 'exec /usr/local/searxng/.venv/bin/granian searx.webapp:app' /usr/local/searxng/entrypoint.sh \
+ && sed -i 's|^exec /usr/local/searxng/.venv/bin/granian searx.webapp:app$|exec /usr/local/searxng/.venv/bin/granian echolot_guard:app|' /usr/local/searxng/entrypoint.sh \
+ && grep -qx 'exec /usr/local/searxng/.venv/bin/granian echolot_guard:app' /usr/local/searxng/entrypoint.sh
+
 # The plain template: the fallback when Tor does not bootstrap (and the file the
 # upstream entrypoint would seed from).
 COPY --chown=977:977 container/railway.settings.yml /usr/local/searxng/settings.template.yml
