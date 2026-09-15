@@ -99,3 +99,54 @@ engines:
     disabled: false
     categories: [news, echo_news_qw]
     timeout: 3.0
+
+  # ── IMAGES (echo_img; the search page's Images tab) ─────────────────────
+  # Measured 2026-09-15 from the Railway IP (Tarr Zoltán / Eiffel Tower /
+  # Christine Lagarde): brave.images 200 relevant hits per query, qwant images
+  # relevant for Hungarian (CAPTCHA at times), wikicommons for places and
+  # people, duckduckgo images (access denied at times — suspended, then back).
+  # NOT in echo_img: bing images (poison: "Komasan fanart" for Christine
+  # Lagarde, "Star of David" for the Eiffel Tower), pinterest (Béla Tarr film
+  # stills for Zoltán Tarr), artic/unsplash/pexels/flickr (stock and art:
+  # Toulouse-Lautrec for "Terror Háza"), google cse images (timeout).
+  - name: brave.images
+    categories: [images, echo_img]
+    timeout: 3.0
+  - name: qwant images
+    disabled: false
+    categories: [images, echo_img]
+    timeout: 3.0
+  - name: wikicommons.images
+    categories: [images, echo_img]
+    timeout: 3.0
+  - name: duckduckgo images
+    categories: [images, echo_img]
+    timeout: 3.0
+
+  # ── VIDEOS (echo_vid; the search page's Videos tab) ─────────────────────
+  # Measured 2026-09-15: youtube, brave.videos, duckduckgo videos, qwant
+  # videos, dailymotion and sepiasearch (PeerTube) answer in ~1.1 s; the same
+  # YouTube video comes from up to 4 engines (the page shows it as the echo).
+  # NOT in echo_vid: google videos (CAPTCHA), vimeo (HTTP error).
+  - name: youtube
+    categories: [videos, music, echo_vid]
+    timeout: 3.0
+  - name: brave.videos
+    categories: [videos, echo_vid]
+    timeout: 3.0
+  - name: duckduckgo videos
+    categories: [videos, echo_vid]
+    timeout: 3.0
+  - name: qwant videos
+    disabled: false
+    categories: [videos, echo_vid]
+    timeout: 3.0
+  - name: dailymotion
+    categories: [videos, echo_vid]
+    timeout: 3.0
+  - name: sepiasearch
+    categories: [videos, echo_vid]
+    timeout: 3.0
+  - name: bing videos
+    categories: [videos, echo_vid]
+    timeout: 3.0
