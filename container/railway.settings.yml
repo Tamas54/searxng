@@ -16,6 +16,15 @@
 #    duckduckgo web 48/48, bing news 48/48, duckduckgo (html) 45/48; google
 #    cse, brave and qwant hit their per-IP limits within minutes.
 #    `suspend_cap` (container/patch_suspend_cap.py) stays available per engine.
+#
+# 2026-10-01 PIHENTETÉS (Kommandant: "próbáljuk rendbe tenni a két motort"),
+# measured from the Railway IP AND from an unrelated home IP alike:
+#  * duckduckgo web (d.js): 202 + a JavaScript challenge for every non-browser client;
+#  * duckduckgo (html): first request 200, then 202 "anomaly"; the Railway range stays
+#    blocked while we keep retrying (0/12 at 5-20 s spacing), so it RESTS;
+#  * qwant (web) + qwant images: 403 with a bot-check page.
+#  Still fine: qwant news/videos, duckduckgo images/videos/news. We do NOT solve
+#  challenges; re-enable only after a polite-rate re-measurement.
 use_default_settings: true
 
 server:
@@ -49,11 +58,11 @@ engines:
     categories: [general, web, echo_web]
     timeout: 3.0
   - name: duckduckgo web
-    disabled: false
+    disabled: true   # PIHENTETÉS 10-01: bot-ellenőrzés / IP-fojtás (see header 2026-10-01)
     categories: [general, echo_web]
     timeout: 3.5
   - name: duckduckgo
-    disabled: false
+    disabled: true   # PIHENTETÉS 10-01: bot-ellenőrzés / IP-fojtás (see header 2026-10-01)
     categories: [general, web, echo_web]
     timeout: 3.5
   - name: brave
@@ -61,7 +70,7 @@ engines:
     categories: [general, web, echo_web]
     timeout: 3.0
   - name: qwant
-    disabled: false
+    disabled: true   # PIHENTETÉS 10-01: bot-ellenőrzés / IP-fojtás (see header 2026-10-01)
     categories: [general, web, echo_web]
     timeout: 3.0
   # luxxle OFF (2026-09-15, production burst of 12 parallel searches): 2/12
@@ -120,7 +129,7 @@ engines:
     categories: [images, echo_img]
     timeout: 3.0
   - name: qwant images
-    disabled: false
+    disabled: true   # PIHENTETÉS 10-01: bot-ellenőrzés / IP-fojtás (see header 2026-10-01)
     categories: [images, echo_img]
     timeout: 3.0
   - name: wikicommons.images
