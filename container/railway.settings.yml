@@ -1,20 +1,21 @@
-# Settings template for the Railway deployment WITHOUT Tor — the fallback the
-# entrypoint selects when Tor does not bootstrap (or SEARXNG_TOR=0): the same
-# direct core as railway-tor.settings.yml, without the Tor exit pool.
+# Settings for the Railway deployment WITHOUT Tor — the LIVE file: Tor is off
+# by default (SEARXNG_TOR=0, container/railway-entrypoint.sh), and this is also
+# the fallback when Tor does not bootstrap. Same engines as
+# railway-tor.settings.yml.
 #
-# 2026-09-15 — TWO kinds of egress, so the instance scales with many users:
+# 2026-09-15 — egress and the engine core, measured for many users:
 #  * DIRECT (the Railway IP): google cse, duckduckgo web, duckduckgo, brave,
-#    qwant, luxxle. The image is SearXNG >= 2026.9.4 (curl_cffi, Chrome TLS
+#    qwant, yandex. The image is SearXNG >= 2026.9.4 (curl_cffi, Chrome TLS
 #    fingerprint): locally measured duckduckgo html 4/4, brave 4/4, qwant 3/4 —
 #    with the old httpx image the Railway IP got duckduckgo html 48/48 "access
 #    denied". Long suspensions here: retrying a blocked IP prolongs the block.
-#  * TOR EXIT POOL (12 isolated circuits — Tor gives every SOCKS username its
-#    own circuit, and SearXNG cycles the proxy list per request): duckduckgo
-#    4/4 and qwant 3/4 through the pool, measured locally — a Tor measurement
-#    does not depend on where we start from, so it holds for Railway too.
-#    Per-engine `suspend_cap` (container/patch_suspend_cap.py): one bad exit
-#    says nothing about the next circuit. NOT onion services — the Kommandant
-#    ruled those out for open-web search; these are clearnet engines via exits.
+#  * NO Tor exit pool: measured under load (48 requests at 20/min) duckduckgo
+#    through 12 isolated Tor circuits answered 3/48 and qwant 2/48 — both deny
+#    Tor exits at sustained rates (a small 4-query sample had looked fine).
+#    The most IP-tolerant engines at that load, from ONE residential IP:
+#    duckduckgo web 48/48, bing news 48/48, duckduckgo (html) 45/48; google
+#    cse, brave and qwant hit their per-IP limits within minutes.
+#    `suspend_cap` (container/patch_suspend_cap.py) stays available per engine.
 use_default_settings: true
 
 server:
@@ -78,9 +79,13 @@ engines:
   # OFF: startpagina (parse errors with the current image), mojeek (a CAPTCHA
   # page with HTTP 200 = silent zero), bing (poisons the ranking). startpage is
   # inactive upstream (proof-of-work CAPTCHA, searxng PR #6669).
+  # Switched off HERE, not only by the upstream default: a new image could flip
+  # a default, and bing would be back in every search without a line changed.
   - name: startpagina
     disabled: true
   - name: mojeek
+    disabled: true
+  - name: bing
     disabled: true
   # onion-only engines of the defaults: they cannot load without Tor and only
   # add an error line to every boot log

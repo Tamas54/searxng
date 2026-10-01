@@ -4,7 +4,7 @@
 #
 # 2026-09-15 — egress and the engine core, measured for many users:
 #  * DIRECT (the Railway IP): google cse, duckduckgo web, duckduckgo, brave,
-#    qwant, luxxle. The image is SearXNG >= 2026.9.4 (curl_cffi, Chrome TLS
+#    qwant, yandex. The image is SearXNG >= 2026.9.4 (curl_cffi, Chrome TLS
 #    fingerprint): locally measured duckduckgo html 4/4, brave 4/4, qwant 3/4 —
 #    with the old httpx image the Railway IP got duckduckgo html 48/48 "access
 #    denied". Long suspensions here: retrying a blocked IP prolongs the block.
@@ -78,9 +78,13 @@ engines:
   # OFF: startpagina (parse errors with the current image), mojeek (a CAPTCHA
   # page with HTTP 200 = silent zero), bing (poisons the ranking). startpage is
   # inactive upstream (proof-of-work CAPTCHA, searxng PR #6669).
+  # Switched off HERE, not only by the upstream default: a new image could flip
+  # a default, and bing would be back in every search without a line changed.
   - name: startpagina
     disabled: true
   - name: mojeek
+    disabled: true
+  - name: bing
     disabled: true
   # onion-only engines of the defaults: they cannot load without Tor and only
   # add an error line to every boot log
